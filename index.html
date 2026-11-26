@@ -84,7 +84,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + 24px)!important}
 </style></head><body>
 <nav class="nav"><button id="nin" class="on" type="button">＋ Трата</button><button id="ndash" type="button">📊 Дашборд</button></nav>
 <div id="vin">
-<div class="hi"><span>Записывает <b id="who">…</b></span><button class="sw" id="us" type="button"><i></i>Общее</button></div>
+<div class="hi"><span>Записывает <b id="who">…</b> <small id="q" style="color:#fbbf24;margin-left:6px"></small></span><button class="sw" id="us" type="button"><i></i>Общее</button></div>
 <div class="amt"><input id="a" inputmode="numeric" autocomplete="off" placeholder="0"><span>₸</span></div>
 <div class="hint" id="h">сумма, потом тап по категории</div>
 <div class="nr"><input id="n" placeholder="на что" autocomplete="off" maxlength="120"><label class="pb" id="pb">📷<input id="f" type="file" accept="image/*" hidden></label></div>
@@ -125,8 +125,19 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + 24px)!important}
    const o=new Uint8Array(12+c.byteLength);o.set(iv);o.set(new Uint8Array(c),12);return b64(o.buffer)};
  FIN.dec=async s=>{const k=await FIN.key(),b=ub(s);return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.subarray(0,12)},k,b.subarray(12)))};
  FIN.me=()=>meP||(meP=fetch(FIN.API+'?k='+encodeURIComponent(FIN.K)+'&data=1').then(r=>r.json()));
- FIN.data=async()=>{meP=null;const j=await FIN.me();if(!j.enc)throw 'empty';return JSON.parse(await FIN.dec(j.enc))};
- FIN.add=async enc=>{const r=await fetch(FIN.API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({k:FIN.K,enc})});if((await r.text()).trim()!=='ok')throw 'no'};
+ FIN.data=async()=>{meP=null;let e='';try{const j=await FIN.me();e=j.enc;try{localStorage.setItem('fin_data',e)}catch(_){}}catch(_){try{e=localStorage.getItem('fin_data')||''}catch(_){}}if(!e)throw 'empty';return JSON.parse(await FIN.dec(e))};
+ FIN.post=async enc=>{const r=await fetch(FIN.API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({k:FIN.K,enc})});if((await r.text()).trim()!=='ok')throw 'no'};
+ const db=()=>new Promise((ok,no)=>{const r=indexedDB.open('fin',1);r.onupgradeneeded=()=>r.result.createObjectStore('q',{autoIncrement:true});r.onsuccess=()=>ok(r.result);r.onerror=no});
+ const tx=async(m,f)=>{const d=await db();return new Promise((ok,no)=>{const t=d.transaction('q',m),s=t.objectStore('q'),r=f(s);t.oncomplete=()=>ok(r&&r.result);t.onerror=no})};
+ FIN.qcount=async()=>{try{return await tx('readonly',s=>s.count())}catch(_){return 0}};
+ FIN.onq=()=>{};
+ FIN.add=async enc=>{try{await FIN.post(enc);return 'sent'}catch(_){await tx('readwrite',s=>s.add(enc));FIN.onq();return 'queued'}};
+ let flushing=false;
+ FIN.flush=async()=>{if(flushing)return;flushing=true;try{const d=await db();
+   const all=await new Promise(ok=>{const out=[];const c=d.transaction('q').objectStore('q').openCursor();c.onsuccess=()=>{const x=c.result;if(x){out.push([x.key,x.value]);x.continue()}else ok(out)}});
+   for(const[k,v]of all){await FIN.post(v);await tx('readwrite',s=>s.delete(k))}}catch(_){}flushing=false;FIN.onq()};
+ addEventListener('online',()=>FIN.flush());setInterval(()=>FIN.flush(),30000);setTimeout(()=>FIN.flush(),1500);
+ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();</script>
 <script>(()=>{
 const K=FIN.K,C=[['Продукты','🛒'],['Кафе и бары','☕','Кафе'],['Доставка еды','🍔','Доставка'],['Такси','🚕'],
@@ -144,8 +155,9 @@ $('f').onchange=e=>{const file=e.target.files[0];if(!file)return;const img=new I
 async function send(d,label){if(busy)return;busy=true;hint('шифрую и отправляю…');
  Object.assign(d,{n:$('n').value.trim(),us:us?1:0,photo});
  let enc;try{enc=await FIN.enc(JSON.stringify(d))}catch(_){busy=false;hint('нет ключа в ссылке — открой свою ссылку целиком',1);return}
- FIN.add(enc).then(()=>{busy=false;$('dt').textContent=label;$('ds').textContent='отправлено, запишу';$('d').style.display='flex'})
-  .catch(()=>{busy=false;hint('не отправилось, проверь интернет',1)})}
+ FIN.add(enc).then(r=>{busy=false;$('dt').textContent=label;$('ds').textContent=r=='sent'?'отправлено, запишу':'нет сети — сохранил на телефоне, отправлю сам';$('d').style.display='flex'})
+  .catch(()=>{busy=false;hint('не сохранилось, попробуй ещё раз',1)})}
+FIN.onq=async()=>{const n=await FIN.qcount();$('q').textContent=n?'в очереди: '+n:''};FIN.onq();
 $('c').innerHTML=C.map((c,i)=>`<button type="button" data-i="${i}" class="${c[3]?'in':''}"><i>${c[1]}</i>${c[2]||c[0]}</button>`).join('');
 $('c').onclick=e=>{const b=e.target.closest('button');if(!b)return;const c=C[+b.dataset.i],a=+A.value.replace(/\D/g,'');
  if(!a){hint('сначала сумма',1);A.focus();return}
