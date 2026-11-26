@@ -98,7 +98,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + 24px)!important}
 <div class="top"><h1>Финансы</h1><div class="upd" id="upd"></div></div>
 <div class="tabs" id="tabs"><button data-p="ilya">Илья</button><button data-p="her">Она</button><button data-p="us">Мы</button></div>
 <div class="card empty hide" id="empty"></div>
-<div id="main"><div class="hero"><div class="lbl" id="herol">На счёте сейчас</div><div class="big" id="bal">—</div><div class="upd" id="per"></div></div>
+<div id="main"><div class="hero"><div class="lbl" id="herol">На счёте сейчас</div><div class="big" id="bal">—</div><div class="upd" id="per"></div><div class="upd" id="forh"></div></div>
 <div class="row">
  <div class="card"><div class="lbl">Доход / мес</div><div class="mid up" id="inc">—</div></div>
  <div class="card"><div class="lbl">Расход / мес</div><div class="mid dn" id="sp">—</div></div>
@@ -208,7 +208,7 @@ function render(){
  goal();if(emp)return;
  const hasBal=D.balance!=null;$('herol').textContent=hasBal?'На счёте сейчас':'Расход в этом месяце';
  count($('bal'),hasBal?D.balance:(D.months.at(-1)||{}).spend||0);$('per').textContent='с '+D.period[0].split('-').reverse().join('.')+' по '+D.period[1].split('-').reverse().join('.');
- $('inc').textContent=f(D.income_pm);$('sp').textContent=f(D.spend_pm);
+ const FH=D.forher;$('forh').textContent=FH&&FH.all?'💜 на '+PP.her+': '+f(FH.m)+' в месяц · '+f(FH.all)+' всего':'';$('inc').textContent=f(D.income_pm);$('sp').textContent=f(D.spend_pm);
  const M=D.months;if(charts.m)charts.m.destroy();charts.m=new Chart($('cm'),{type:'bar',data:{labels:M.map(x=>mn(x.m)),datasets:[{label:'Доход',data:M.map(x=>x.income+x.back),backgroundColor:'#c8f560',borderRadius:8,barPercentage:.7},{label:'Расход',data:M.map(x=>x.spend),backgroundColor:'#ff6b6b',borderRadius:8,barPercentage:.7}]},options:{plugins:{legend:{labels:{boxWidth:10,boxHeight:10,useBorderRadius:true,borderRadius:3}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+f(c.raw)}}},scales:{y:{ticks:{callback:v=>v>=1e6?(v/1e6)+' млн':v/1000+' т'}},x:{grid:{display:false}}}}});
  if(!M.some(x=>x.m==sel))sel='all';const seg=$('seg');seg.innerHTML=['all',...M.map(x=>x.m)].map(m=>`<button data-m="${m}" class="${m==sel?'on':''}">${m=='all'?'Всё':mn(m)}</button>`).join('');seg.onclick=e=>{const b=e.target.closest('button');if(!b)return;sel=b.dataset.m;[...seg.children].forEach(x=>x.classList.toggle('on',x==b));cats()};cats();
  show('tcard',D.tips.length>0);$('tips').innerHTML=D.tips.map(t=>`<div class="tip"><span>${t.c} <span class="upd">${f(t.pm)}/мес</span></span><b>+${f(t.save)}</b></div>`).join('');
