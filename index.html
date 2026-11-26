@@ -1,5 +1,5 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<title>Финансист</title><meta name="apple-mobile-web-app-title" content="Финансист"><meta name="theme-color" content="#0b0d12"><script>(()=>{const c=document.createElement('canvas');c.width=c.height=180;const x=c.getContext('2d');x.fillStyle='#c8f560';x.fillRect(0,0,180,180);x.fillStyle='#0b0d12';x.font='800 110px -apple-system,BlinkMacSystemFont,Helvetica,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('₸',90,96);const u=c.toDataURL();for(const r of['apple-touch-icon','icon']){const l=document.createElement('link');l.rel=r;l.href=u;document.head.appendChild(l)}})()</script><meta name="robots" content="noindex">
+<title>Финансист</title><meta name="apple-mobile-web-app-title" content="Финансист"><meta name="theme-color" content="#0b0d12"><meta name="color-scheme" content="dark"><script>(()=>{const c=document.createElement('canvas');c.width=c.height=180;const x=c.getContext('2d');x.fillStyle='#c8f560';x.fillRect(0,0,180,180);x.fillStyle='#0b0d12';x.font='800 110px -apple-system,BlinkMacSystemFont,Helvetica,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('₸',90,96);const u=c.toDataURL();for(const r of['apple-touch-icon','icon']){const l=document.createElement('link');l.rel=r;l.href=u;document.head.appendChild(l)}})()</script><meta name="robots" content="noindex">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 <style>
 :root{--bg:#0b0d12;--card:#141821;--line:#232937;--txt:#eef1f7;--mut:#8b93a7;--acc:#c8f560;--acc2:#6ea8ff;--red:#ff6b6b;--grn:#4ade80}
@@ -72,19 +72,25 @@ canvas{max-width:100%}
 .done i{font-style:normal;font-size:56px}.done button{margin-top:18px;border:0;background:var(--acc);color:#0b0d12;font:inherit;font-weight:700;padding:14px 28px;border-radius:14px}.done small{color:var(--mut);font-size:13px;font-weight:500}
 .off{margin-top:18px;text-align:center;color:var(--mut);font-size:12px}
 
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 12px calc(env(safe-area-inset-bottom) + 8px);background:rgba(11,13,18,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid #232937}
-.nav button{border:0;border-radius:14px;padding:12px 0;background:none;color:#8b93a7;font:inherit;font-weight:600;font-size:15px}
+.nav{position:sticky;top:calc(env(safe-area-inset-top) + 6px);z-index:20;display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:0 0 18px;border-radius:16px;background:rgba(20,24,33,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid #232937}
+.nav button{border:0;border-radius:12px;padding:10px 0;background:none;color:#8b93a7;font:inherit;font-weight:600;font-size:15px}
 .nav button.on{background:#eef1f7;color:#0b0d12}
-body{padding-bottom:calc(env(safe-area-inset-bottom) + 90px)!important}
+body{padding-bottom:calc(env(safe-area-inset-bottom) + 24px)!important}
+.bigmic{display:flex;flex-direction:column;align-items:center;gap:8px;margin:26px auto 0;border:0;background:none;color:var(--mut);font:inherit;font-size:13px;touch-action:none;-webkit-user-select:none;user-select:none}
+.bigmic i{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:34px;background:var(--acc);color:#0b0d12;box-shadow:0 8px 30px rgba(200,245,96,.25);transition:transform .15s}
+.bigmic.rec i{background:#ff6b6b;transform:scale(1.12);box-shadow:0 0 0 12px rgba(255,107,107,.18)}
+.bigmic.rec span{color:#ff6b6b}
 #vin .done{z-index:30}
 </style></head><body>
+<nav class="nav"><button id="nin" class="on" type="button">＋ Трата</button><button id="ndash" type="button">📊 Дашборд</button></nav>
 <div id="vin">
 <div class="hi"><span>Записывает <b id="who">…</b></span><button class="sw" id="us" type="button"><i></i>Общее</button></div>
 <div class="amt"><input id="a" inputmode="numeric" autocomplete="off" placeholder="0"><span>₸</span></div>
 <div class="hint" id="h">сумма, потом тап по категории</div>
-<div class="nr"><input id="n" placeholder="на что" autocomplete="off" maxlength="120"><button class="mic" id="mic" type="button">🎤</button><label class="pb" id="pb">📷<input id="f" type="file" accept="image/*" hidden></label></div>
+<div class="nr"><input id="n" placeholder="на что" autocomplete="off" maxlength="120"><label class="pb" id="pb">📷<input id="f" type="file" accept="image/*" hidden></label></div>
 <div class="ilbl">Категория — сразу запишет</div>
 <div class="cats" id="c"></div>
+<button class="bigmic" id="mic" type="button"><i>🎤</i><span id="micl">Зажми и говори</span></button>
 <button class="send" id="send" type="button">Отправить на разбор</button><div class="off" id="off"></div>
 <div class="done" id="d"><i id="di">✅</i><span id="dt"></span><small id="ds"></small><button type="button" id="more">Ещё одну</button></div>
 </div>
@@ -109,7 +115,6 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + 90px)!important}
 </div>
 <div class="foot">Данные зашифрованы, ключ только в ваших ссылках</div>
 </div>
-<nav class="nav"><button id="nin" class="on" type="button">＋ Трата</button><button id="ndash" type="button">📊 Дашборд</button></nav>
 <script>const FIN={API:'https://script.google.com/macros/s/AKfycbzG21bX1Y7PiD2Pq5Y78ZZVp0VJnOpfOtbCbe91rrZ8mDrlPg9EeNn3LtDPazxhbFvxUA/exec',K:new URLSearchParams(location.search).get('k')||''};
 (()=>{let keyP=null,meP=null;
  const b64=u=>{let s='';const a=new Uint8Array(u);for(let i=0;i<a.length;i+=8192)s+=String.fromCharCode.apply(null,a.subarray(i,i+8192));return btoa(s)};
@@ -128,7 +133,7 @@ const K=FIN.K,C=[['Продукты','🛒'],['Кафе и бары','☕','Ка
 ['Транспорт','🚇'],['Игры и развлечения','🎬','Развлеч.'],['Подписки и софт','📱','Подписки'],['Одежда','👕'],
 ['Онлайн-покупки','📦','Покупки'],['Прочее','•••'],['В копилку','🐷','Копилка',1],['Доход','💰','Доход',1]];
 const $=id=>document.getElementById(id),A=$('a');let us=false,photo='',busy=false,rec=null,chunks=[];
-$('who').textContent='…';FIN.me().then(j=>{$('who').textContent=j.name||'?'}).catch(()=>{$('who').textContent='нет доступа'});
+let nm='';try{nm=localStorage.getItem('fin_name')||''}catch(_){};$('who').textContent=nm||'…';FIN.me().then(j=>{$('who').textContent=j.name||'?';try{localStorage.setItem('fin_name',j.name||'')}catch(_){}}).catch(()=>{$('who').textContent='нет доступа'});
 const fmt=s=>s.replace(/\D/g,'').replace(/^0+/,'').slice(0,9).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
 const hint=(t,e)=>{$('h').className='hint'+(e?' err':'');$('h').textContent=t};
 const free=()=>{$('send').style.display=(!A.value&&($('n').value.trim()||photo))?'block':'none'};
@@ -150,10 +155,10 @@ const mic=$('mic');
 mic.addEventListener('pointerdown',async e=>{e.preventDefault();if(rec)return;
  try{const st=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];rec=new MediaRecorder(st);
   rec.ondataavailable=x=>chunks.push(x.data);
-  rec.onstop=()=>{st.getTracks().forEach(t=>t.stop());const bl=new Blob(chunks,{type:rec.mimeType||'audio/mp4'}),m=rec.mimeType||'audio/mp4';rec=null;mic.classList.remove('rec');
+  rec.onstop=()=>{st.getTracks().forEach(t=>t.stop());const bl=new Blob(chunks,{type:rec.mimeType||'audio/mp4'}),m=rec.mimeType||'audio/mp4';rec=null;mic.classList.remove('rec');$('micl').textContent='Зажми и говори';
    if(bl.size<2000){hint('держи кнопку, пока говоришь');return}
    const r=new FileReader();r.onload=()=>send({audio:r.result,amime:m,a:+A.value.replace(/\D/g,'')||0},'🎤 Голосовое');r.readAsDataURL(bl)};
-  rec.start();mic.classList.add('rec');hint('говори… отпусти, чтобы отправить')}
+  rec.start();mic.classList.add('rec');$('micl').textContent='Говори… отпусти — отправлю'}
  catch(_){hint('разреши доступ к микрофону для этой страницы',1)}});
 ['pointerup','pointercancel','pointerleave'].forEach(t=>mic.addEventListener(t,()=>{if(rec&&rec.state=='recording')rec.stop()}));
 $('more').onclick=()=>{A.value='';$('n').value='';photo='';$('pb').style.backgroundImage='';$('pb').classList.remove('has');$('d').style.display='none';hint('сумма, потом тап по категории');free();A.focus()};
